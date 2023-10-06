@@ -1,0 +1,23 @@
+
+# Jupyter Notebook files
+.ipynb_checkpoints/
+.jupyter/
+
+# Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# macOS system files
+.DS_Store
+
+# Virtual environment
+venv/
+.env/
+
+# Datafiles
+data/**/*.csv
+data/**/*.pdf
+data/**/*.db
