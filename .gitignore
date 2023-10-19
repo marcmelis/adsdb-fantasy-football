@@ -21,3 +21,4 @@ venv/
 data/**/*.csv
 data/**/*.pdf
 data/**/*.db
+data/**/*.txt
