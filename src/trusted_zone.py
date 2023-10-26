@@ -7,7 +7,7 @@
 # packages
 import pandas as pd
 import numpy as np
-import duckdb 
+import duckdb
 import math
 from datetime import timedelta
 
@@ -26,13 +26,13 @@ def get_tables(conn):
     tables_lists = conn.sql("SHOW TABLES").fetchall()
     return [t[0] for t in tables_lists]
 
-def is_numeric(column): 
-    try: 
+def is_numeric(column):
+    try:
         pd.to_numeric(column, errors='raise')
         return True
-    except: 
+    except:
         return False
-    
+
 def table_exists(table_name, conn):
     return table_name in get_tables(conn)
 
@@ -42,9 +42,9 @@ def get_table_df(table_name, conn):
 def drop_table(table_name, conn):
     if table_exists(table_name, conn):
         conn.sql(f"DROP TABLE \"{table_name}\"")
-    
+
 def create_table(table_name, df, conn, replace=True):
-    if replace & table_exists(table_name, conn): 
+    if replace & table_exists(table_name, conn):
         drop_table(table_name, conn)
     conn.sql(f"CREATE TABLE \"{table_name}\" AS SELECT * FROM df")
 
@@ -55,13 +55,13 @@ def append_table(table_name, df, conn):
 # In[4]:
 
 
-# Gets the file with the last date, 
+# Gets the file with the last date,
 # ex: for filename=cleaned_merged_seasons would return cleaned_merged_seasons_2023-09-22.csv
 from datetime import datetime
 def get_last_table(table_names, fileformat="csv"):
     format_str = "%Y-%m-%d"  # Date format
     most_recent_file = max(
-        table_names, 
+        table_names,
         key=lambda f: datetime.strptime(f[-len("yyyy-MM-dd"):], format_str)
     )
     return most_recent_file
@@ -73,7 +73,6 @@ def get_last_table(table_names, fileformat="csv"):
 # get all the tables in the formatted zone
 conn = duckdb.connect(formatted_zone_db)
 formatted_zone_tables = get_tables(conn)
-formatted_zone_tables
 conn.close()
 
 
@@ -89,8 +88,8 @@ df = get_table_df(latest_table_name, conn)
 conn.close()
 # do some data quality checks
 assert df.isna().sum().sum() == 0
-assert isinstance(df.LAT.dtype, np.dtypes.Float64DType)
-assert isinstance(df.LON.dtype, np.dtypes.Float64DType)
+assert df.LAT.dtype == np.float64
+assert df.LON.dtype == np.float64
 
 
 conn = duckdb.connect(trusted_zone_db)
@@ -192,7 +191,7 @@ def euclidean_distance(lat1, lon1, lat2, lon2):
 
     return distance
 
-def wdir_to_deg(wdir): 
+def wdir_to_deg(wdir):
     wdir_dict = {
         "N": 0,
         "E": 90,
@@ -200,14 +199,14 @@ def wdir_to_deg(wdir):
         "W": 270
     }
 
-    for i, c in enumerate(wdir): 
+    for i, c in enumerate(wdir):
         if i == 0: deg = wdir_dict[wdir[len(wdir) - 1 - i]]
-        else: 
+        else:
             deg = (deg + wdir_dict[wdir[len(wdir) - 1 - i]]) / 2
 
     return deg
 
-def deg_to_wdir(deg): 
+def deg_to_wdir(deg):
     wind_directions = [
         ('N', (345, 15)),
         ('NNE', (15, 30)),
@@ -226,7 +225,7 @@ def deg_to_wdir(deg):
         ('NW', (300,330)),
         ('NNW', (330,345))
     ]
-    
+
     # Loop through the wind direction abbreviations and degree ranges
     for direction, (lower, upper) in wind_directions:
         if lower <= deg < upper:
@@ -249,12 +248,12 @@ unique_met_months = list(set([t[:-len("_yyyy-MM-dd")] for t in metoffice_tables]
 # drop_table(trusted_zone_table, trusted_conn)
 df = None
 
-for month in unique_met_months: 
+for month in unique_met_months:
     month_tables = filter(lambda x: x.startswith(month), metoffice_tables)
 
     # pick the newest table for the season
     latest_table_name = get_last_table(month_tables)
-    
+
     formated_conn = duckdb.connect(formatted_zone_db)
     df = pd.concat([df, get_table_df(latest_table_name,formated_conn)])
     formated_conn.close()
@@ -279,7 +278,7 @@ for column in df.columns:
             # check if this station should be interpolated for this column
             start_date = date - timedelta(days = 1)
             end_date = date + timedelta(days = 1)
-            
+
             prev_measure = np.nan
             post_measure = np.nan
             t = df.loc[(df.Station_name == station) & (df.Date == start_date)]
@@ -288,9 +287,9 @@ for column in df.columns:
             t = df.loc[(df.Station_name == station) & (df.Date == end_date)]
             if len(t) > 0: post_measure = t[column].iloc[0]
 
-            if not np.isnan(prev_measure) and isinstance(prev_measure, (int, float)) and not np.isnan(post_measure) and isinstance(post_measure, (int, float)): 
+            if not np.isnan(prev_measure) and isinstance(prev_measure, (int, float)) and not np.isnan(post_measure) and isinstance(post_measure, (int, float)):
                 interpolated_value = np.mean([prev_measure, post_measure])
-            else: 
+            else:
                 # mean of nearby stations
                 lat = loc_df.loc[loc_df.SITE == station].LAT
                 lon = loc_df.loc[loc_df.SITE == station].LON
@@ -302,11 +301,11 @@ for column in df.columns:
                 closest_stations = list(loc_df.head(4).SITE)
                 closest_df = df.loc[(df.Date == date) & df.Station_name.apply(lambda x: x in closest_stations)]
 
-                if column == 'WDIR': 
+                if column == 'WDIR':
                     interpolated_value = deg_to_wdir(closest_df.loc[:,column].apply(wdir_to_deg).mean())
-                else: 
+                else:
                     interpolated_value = closest_df.loc[:,column].mean()
-            
+
             # print(i, interpolated_value, station, column, date)
             imputed_df.loc[i, column] = interpolated_value
 
@@ -330,16 +329,16 @@ conn.close()
 
 trusted_zone_table = 'football-data'
 football_data_tables = list(filter(lambda x: x.startswith(trusted_zone_table), formatted_zone_tables))
-# group all tables for the same season 
+# group all tables for the same season
 unique_seasons = list(set([t[:-len("_yyyy-MM-dd")] for t in football_data_tables]))
 
 
 df = None
-for season in unique_seasons: 
+for season in unique_seasons:
     season_tables = filter(lambda x: x.startswith(season), football_data_tables)
     # pick the newest table for the season
     latest_table_name = get_last_table(season_tables)
-    
+
     # retrieve the formatted zone df
     formatted_conn = duckdb.connect(formatted_zone_db)
     df = pd.concat([df, get_table_df(latest_table_name, formatted_conn)])
@@ -358,50 +357,50 @@ for column in df.columns[24:]:
     backup_column = None
     original_columns = None
 
-    if   column in ["B365H","BWH","IWH","PSH","WHH","VCH"]: 
-        backup_column = "AvgH" 
+    if   column in ["B365H","BWH","IWH","PSH","WHH","VCH"]:
+        backup_column = "AvgH"
         original_columns = ["B365H","BWH","IWH","PSH","WHH","VCH"]
-    elif column in ["B365D","BWD","IWD","PSD","WHD","VCD"]: 
-        backup_column = "AvgD" 
+    elif column in ["B365D","BWD","IWD","PSD","WHD","VCD"]:
+        backup_column = "AvgD"
         original_columns = ["B365D","BWD","IWD","PSD","WHD","VCD"]
-    elif column in ["B365A","BWA","IWA","PSA","WHA","VCA"]: 
-        backup_column = "AvgA" 
+    elif column in ["B365A","BWA","IWA","PSA","WHA","VCA"]:
+        backup_column = "AvgA"
         original_columns = ["B365A","BWA","IWA","PSA","WHA","VCA"]
-    elif column in ["B365>2.5","P>2.5"]: 
-        backup_column = "Avg>2.5" 
+    elif column in ["B365>2.5","P>2.5"]:
+        backup_column = "Avg>2.5"
         original_columns = ["B365>2.5","P>2.5"]
-    elif column in ["B365<2.5","P<2.5"]: 
-        backup_column = "Avg<2.5" 
+    elif column in ["B365<2.5","P<2.5"]:
+        backup_column = "Avg<2.5"
         original_columns = ["B365<2.5","P<2.5"]
-    elif column in ["AHh","B365AHH","PAHH"]: 
-        backup_column = "AvgAHH" 
+    elif column in ["AHh","B365AHH","PAHH"]:
+        backup_column = "AvgAHH"
         original_columns = ["AHh","B365AHH","PAHH"]
-    elif column in ["B365AHA","PAHA"]: 
-        backup_column = "AvgAHA" 
+    elif column in ["B365AHA","PAHA"]:
+        backup_column = "AvgAHA"
         original_columns = ["B365AHA","PAHA"]
-    elif column in ["B365CH","BWCH","IWCH","PSCH","WHCH","VCCH"]: 
-        backup_column = "AvgCH" 
+    elif column in ["B365CH","BWCH","IWCH","PSCH","WHCH","VCCH"]:
+        backup_column = "AvgCH"
         original_columns = ["B365CH","BWCH","IWCH","PSCH","WHCH","VCCH"]
-    elif column in ["B365CD","BWCD","IWCD","PSCD","WHCD","VCCD"]: 
-        backup_column = "AvgCD" 
+    elif column in ["B365CD","BWCD","IWCD","PSCD","WHCD","VCCD"]:
+        backup_column = "AvgCD"
         original_columns = ["B365CD","BWCD","IWCD","PSCD","WHCD","VCCD"]
-    elif column in ["B365CA","BWCA","IWCA","PSCA","WHCA","VCCA"]: 
-        backup_column = "AvgCA" 
+    elif column in ["B365CA","BWCA","IWCA","PSCA","WHCA","VCCA"]:
+        backup_column = "AvgCA"
         original_columns = ["B365CA","BWCA","IWCA","PSCA","WHCA","VCCA"]
-    elif column in ["B365C>2.5","PC>2.5"]: 
-        backup_column = "AvgC>2.5" 
+    elif column in ["B365C>2.5","PC>2.5"]:
+        backup_column = "AvgC>2.5"
         original_columns = ["B365C>2.5","PC>2.5"]
-    elif column in ["B365C<2.5","PC<2.5"]: 
-        backup_column = "AvgC<2.5" 
+    elif column in ["B365C<2.5","PC<2.5"]:
+        backup_column = "AvgC<2.5"
         original_columns = ["B365C<2.5","PC<2.5"]
-    elif column in ["AHCh","B365CAHH","PCAHH"]: 
-        backup_column = "AvgCAHH" 
+    elif column in ["AHCh","B365CAHH","PCAHH"]:
+        backup_column = "AvgCAHH"
         original_columns = ["AHCh","B365CAHH","PCAHH"]
-    elif column in ["B365CAHA","PCAHA"]: 
-        backup_column = "AvgCAHA" 
+    elif column in ["B365CAHA","PCAHA"]:
+        backup_column = "AvgCAHA"
         original_columns = ["B365CAHA","PCAHA"]
 
-    
+
     if   column in ["AvgH", "MaxH"]:        original_columns = ["B365H","BWH","IWH","PSH","WHH","VCH"]
     elif column in ["AvgD", "MaxD"]:        original_columns = ["B365D","BWD","IWD","PSD","WHD","VCD"]
     elif column in ["AvgA", "MaxA"]:        original_columns = ["B365A","BWA","IWA","PSA","WHA","VCA"]
@@ -418,16 +417,16 @@ for column in df.columns[24:]:
     elif column in ["AvgCAHA", "MaxCAHA"]:  original_columns = ["B365CAHA","PCAHA"]
 
     for i, value in enumerate(df[column]):
-        if pd.isna(value): 
+        if pd.isna(value):
             if backup_column is None: # Avg or Max column
-                if column.startswith("Avg"): 
+                if column.startswith("Avg"):
                     imputed_value = df.loc[i, original_columns].mean()
-                elif column.startswith("Max"): 
+                elif column.startswith("Max"):
                     imputed_value = df.loc[i, original_columns].max()
-            else: 
-                if pd.isna(df.loc[i, backup_column]): 
+            else:
+                if pd.isna(df.loc[i, backup_column]):
                     imputed_value = df.loc[i, original_columns].mean()
-                else: 
+                else:
                     imputed_value = df.loc[i, backup_column]
             imputed_df.loc[i, column] = imputed_value
 
@@ -438,7 +437,3 @@ trusted_conn.close()
 
 
 # In[ ]:
-
-
-
-
