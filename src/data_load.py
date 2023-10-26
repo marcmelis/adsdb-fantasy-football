@@ -15,7 +15,7 @@ import os
 # In[2]:
 
 
-os.getcwd()
+#os.getcwd()
 
 
 # In[3]:
@@ -30,7 +30,7 @@ z.extractall(f"../data/landing/temporal")
 # In[4]:
 
 
-res.status_code
+#res.status_code
 
 
 # In[6]:
@@ -85,7 +85,3 @@ for key in metdata_urls.keys():
 
 
 # In[ ]:
-
-
-
-
