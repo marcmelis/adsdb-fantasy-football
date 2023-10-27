@@ -115,7 +115,7 @@ def move_to_trusted(data_dir):
 
     temp_set = set(df.team_x) - set(stadium_df.team_name)
     temp_set.discard(None)
-    assert len(temp_set) == 0, "Teams in cleaned_merged_seasons are not present in stadium location tables"
+    assert len(temp_set) == 0, f"Teams in cleaned_merged_seasons are not present in stadium location tables. {temp_set}"
 
     assert not __is_numeric__(df.season_x), "Column season_x should not be numeric in cleaned_merged_seasons"
     assert not __is_numeric__(df.name), "Column name should not be numeric in cleaned_merged_seasons"
@@ -275,6 +275,20 @@ def move_to_trusted(data_dir):
         formatted_conn.close()
 
     df = df.reset_index(drop=True)
+    df['HomeTeam'] = df['HomeTeam'].replace('Tottenham', 'Spurs')
+    df['HomeTeam'] = df['HomeTeam'].replace('Man United', 'Man Utd')
+    df['AwayTeam'] = df['AwayTeam'].replace('Tottenham', 'Spurs')
+    df['AwayTeam'] = df['AwayTeam'].replace('Man United', 'Man Utd')
+
+    # do some data quality checks
+    conn = duckdb.connect(trusted_zone_db)
+    stadium_df = duck_db_helper.get_table_df("team_stadium_location", conn)
+    conn.close()
+
+    temp_set = set(df.HomeTeam) - set(stadium_df.team_name)
+    temp_set.discard(None)
+    assert len(temp_set) == 0, f"Teams in cleaned_merged_seasons are not present in stadium location tables. {temp_set}"
+
     imputed_df = df.__deepcopy__()
 
 
