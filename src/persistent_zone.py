@@ -6,7 +6,6 @@ import json
 def move_to_persistent(data_dir):
   with open('src/metadata_dictionary.json') as f:
       datasets = json.load(f)
-  print(os.getcwd())
   temporal_dir = os.path.join(data_dir, "landing", "temporal")
   persistent_dir = os.path.join(data_dir, "landing", "persistent")
   for filename in glob.glob(os.path.join(temporal_dir, '*.*')):

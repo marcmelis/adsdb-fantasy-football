@@ -18,6 +18,6 @@ directories = [
 for directory in directories:
     if not os.path.exists(directory):
         os.makedirs(directory, exist_ok=True)
-        print(f"Directory {directory} created.")
+        print(f"\tDirectory {directory} created.")
     else:
-        print(f"Directory {directory} already exists.")
+        print(f"\tDirectory {directory} already exists.")

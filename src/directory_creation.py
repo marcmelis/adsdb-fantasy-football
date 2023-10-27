@@ -19,6 +19,6 @@ def create_directories(data_dir):
     for directory in directories:
         if not os.path.exists(os.path.join(data_dir,directory)):
             os.makedirs(os.path.join(data_dir,directory), exist_ok=True)
-            print(f"Directory {directory} created.")
+            print(f"\tDirectory {directory} created.")
         else:
-            print(f"Directory {directory} already exists.")
+            print(f"\tDirectory {directory} already exists.")
