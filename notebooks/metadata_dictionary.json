@@ -1,0 +1,26 @@
+[
+    {
+        "standard_data_name":"cleaned_merged_seasons",
+        "columns":[]
+    },
+    {
+        "standard_data_name":"football-data",
+        "columns": []
+    },
+    {
+        "standard_data_name":"master_team_list",
+        "columns": []
+    },
+    {
+        "standard_data_name":"Metoffice",
+        "columns": []
+    },
+    {
+        "standard_data_name":"team_stadium_location",
+        "columns": []
+    },
+    {
+        "standard_data_name":"weather_station_locations",
+        "columns": []
+    }
+]

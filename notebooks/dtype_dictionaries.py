@@ -203,3 +203,4 @@ def create_dtype_dict(filename):
         },
         []
         )
+    raise ValueError("No dataset found. Add dtype declarations to dictionary")
