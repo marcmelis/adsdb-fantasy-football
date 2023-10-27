@@ -1,5 +1,8 @@
 import argparse
+import os
 from src import data_load
+from src import directory_creation
+from src import persistent_zone
 
 def download_command(args):
     save_dir = "data/landing/temporal"
@@ -23,7 +26,11 @@ def download_command(args):
     
 
 def persistent_command(args):
-    print("Enable persistent storage")
+    data_dir = "data"
+    print("Creating directory structure")
+    directory_creation.create_directories(data_dir)
+    print("Moving files to persistent")
+    persistent_zone.move_to_persistent(data_dir)
 
 def formatted_command(args):
     print("Enable formatted data")
