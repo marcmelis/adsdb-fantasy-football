@@ -3,6 +3,7 @@ import os
 from src import data_load
 from src import directory_creation
 from src import persistent_zone
+from src import formatted_zone
 
 def download_command(args):
     save_dir = "data/landing/temporal"
@@ -34,6 +35,10 @@ def persistent_command(args):
 
 def formatted_command(args):
     print("Enable formatted data")
+    formatted_zone.move_to_formatted("data")
+
+def list_formatted_tables(args):
+    formatted_zone.list_formatted_tables("data")
 
 def trusted_command(args):
     print("Enable trusted data")
@@ -67,6 +72,12 @@ def main():
     )
 
     parser.add_argument(
+        "--list_formatted_tables",
+        action="store_true",
+        help="Enable formatted data",
+    )
+
+    parser.add_argument(
         "--trusted",
         "-t",
         action="store_true",
@@ -95,6 +106,8 @@ def main():
         persistent_command(args)
     if args.formatted:
         formatted_command(args)
+    if args.list_formatted_tables:
+        list_formatted_tables(args)
     if args.trusted:
         trusted_command(args)
     if args.exploitation:

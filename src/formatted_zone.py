@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 # packages
 import pandas as pd
 import camelot
@@ -13,13 +7,9 @@ import re
 import os
 import duckdb
 import numpy as np
-from dtype_dictionaries import create_dtype_dict
+from . import dtype_dictionaries 
 
-
-# In[2]:
-
-
-def transform_month(match):
+def __transform_month__(match):
     month_abbreviations = {
         "January": "01",
         "February": "02",
@@ -40,20 +30,20 @@ def transform_month(match):
     full_month = month_abbreviations.get(month_abbrev, month_abbrev)
     return f"{match.group(5)}-{full_month}-{match.group(1)}"
 
-def parse_date(page_text):
+def __parse_date__(page_text):
     # The top of the page is always:  "Daily Weather Summary for Sunday 01 January 2023 \n".
     pre_index = page_text.find('day') + 3 # we cant be sure that the pdf if correctly read 100% so this should be quite generic
     post_index = page_text.find('Selected')
     # Get the date between the two token variables and add to the df
     date = re.sub(r'[^a-zA-Z0-9]', '', page_text[pre_index:post_index])
-    formatted_date = re.sub(r'(\d{1,2})(\s*)([A-Za-z]+)(\s*)(\d{3,4})', transform_month, date) # make sure to format the date correctly for
+    formatted_date = re.sub(r'(\d{1,2})(\s*)([A-Za-z]+)(\s*)(\d{3,4})', __transform_month__, date) # make sure to format the date correctly for
     midnight = formatted_date + "T00:00"
     noon = formatted_date + "T12:00"
     print(midnight)
     return np.datetime64(midnight), np.datetime64(noon)
 
-def process_met_pdf(file_path):
-    dtype_dict, _ = create_dtype_dict(file_path)
+def __process_met_pdf__(file_path):
+    dtype_dict, _ = dtype_dictionaries.create_dtype_dict(file_path)
 
     # This is the text at the top of the page where the weather tables are. We use it to know which pages we want to read
     search_string = 'Selected UK readings at (L) 0000 and (R) 1200 UTC'
@@ -81,7 +71,7 @@ def process_met_pdf(file_path):
                 noon_columns = table_df.columns[:2].union(table_df.columns[8:])
                 noon_df = table_df[noon_columns]
 
-                midnight_date, noon_date = parse_date(page_text)
+                midnight_date, noon_date = __parse_date__(page_text)
 
                 midnight_df.insert(0, "Date", midnight_date)
                 midnight_df = midnight_df.replace("-", np.nan)
@@ -99,77 +89,51 @@ def process_met_pdf(file_path):
     return df
 
 
-
-# In[3]:
-
-
-def get_tables(conn):
+def __get_tables__(conn):
     tables_lists = conn.sql("SHOW TABLES").fetchall()
     return [t[0] for t in tables_lists]
 
-def table_exists(table_name, conn):
-    return table_name in get_tables(conn)
+def __table_exists__(table_name, conn):
+    return table_name in __get_tables__(conn)
+
+def move_to_formatted(data_dir):
+
+    data_path= os.path.join(data_dir, "landing", "persistent", "*", "*")
+    # connect to the formatted zone database
+    conn = duckdb.connect(os.path.join(data_dir, 'formatted_zone', 'formatted_zone.db'))
+
+    for file in glob.glob(data_path):
+        if os.path.isdir(file):
+            continue
+        base_name = os.path.basename(file) # Get last part of the filepath
+        table_name = os.path.splitext(base_name)[0] # Remove the extension if there is one
+        if __table_exists__(table_name, conn):
+            continue
+        print(f"Processing: {table_name}")
+        # only move .csv and .pdf files to a table
+        if file.split(".")[-1] == "csv":
+            dtype_dict, date_columns = dtype_dictionaries.create_dtype_dict(table_name)
+            df = pd.read_csv(file, dtype=dtype_dict, parse_dates=date_columns)
+
+            conn.sql(f"CREATE TABLE \"{table_name}\" AS SELECT * FROM df")
+
+        if file.split(".")[-1] == "pdf":
+            # this will create a new table per pdf file
+            df = __process_met_pdf__(file)
+
+            conn.sql(f"CREATE TABLE \"{table_name}\" AS SELECT * FROM df")
 
 
-# In[ ]:
+    # close the connection
+    conn.close()
 
+def list_formatted_tables(data_dir):
+    # CHECK THE TABLES ON THE DB
+    conn = duckdb.connect(os.path.join(data_dir,'formatted_zone', 'formatted_zone.db'))
+    tables = __get_tables__(conn)
+    for table_name in tables:
+        print(table_name)
+        # df = conn.sql(f"SELECT * FROM \"{table_name}\";").df()
+        # print(df.describe())
+    conn.close()
 
-data_path="../data/landing/persistent/*"
-# connect to the formatted zone database
-conn = duckdb.connect('../data/formatted_zone/formatted_zone.db')
-
-for file in glob.glob(data_path):
-    base_name = os.path.basename(file) # Get last part of the filepath
-    table_name = os.path.splitext(base_name)[0] # Remove the extension if there is one
-    if table_exists(table_name, conn):
-        continue
-    print(f"Processing: {table_name}")
-    # only move .csv and .pdf files to a table
-    if file.split(".")[-1] == "csv":
-        dtype_dict, date_columns = create_dtype_dict(table_name)
-        df = pd.read_csv(file, dtype=dtype_dict, parse_dates=date_columns)
-
-        conn.sql(f"CREATE TABLE \"{table_name}\" AS SELECT * FROM df")
-
-    if file.split(".")[-1] == "pdf":
-        # this will create a new table per pdf file
-        df = process_met_pdf(file)
-
-        conn.sql(f"CREATE TABLE \"{table_name}\" AS SELECT * FROM df")
-
-
-# close the connection
-conn.close()
-
-
-# In[5]:
-
-
-# CHECK THE TABLES ON THE DB
-conn = duckdb.connect('../data/formatted_zone/formatted_zone.db')
-tables = get_tables(conn)
-for table_name in tables:
-    print(table_name)
-    df = conn.sql(f"SELECT * FROM \"{table_name}\";").df()
-    # print(df.describe())
-conn.close()
-
-
-# In[ ]:
-
-
-# CONVERT Metdata to correct datatypes. Only needed because Jóhannes forgot to when processing pdfs initially
-# df_dtypes = {'Date': "datetime64[s]", 'Station_no': int, 'Station_name': str, 'PRESS': float, 'WDIR': str, 'WSPD': float, 'CLOUD': float, 'TEMP': float, 'TDEW': float}
-# conn = sqlite3.connect('../data/formatted_zone/formatted_zone.db')
-# c = conn.cursor()
-# c.execute("SELECT name FROM sqlite_master WHERE type='table';")
-# tables = c.fetchall()
-# for table in tables:
-#     table_name = table[0]
-#     if 'Metoffice' not in table_name: continue
-#     print(table_name)
-#     dtype_dict, date_columns = create_dtype_dict(table_name)
-#     df = pd.read_sql_query(f"SELECT * FROM \"{table_name}\";", conn, parse_dates=date_columns)
-#     df = df.astype(df_dtypes)
-#     df.to_sql(table_name, con=conn, if_exists='replace', index=False)
-# conn.close()
