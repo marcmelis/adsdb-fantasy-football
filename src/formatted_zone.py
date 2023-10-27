@@ -8,6 +8,7 @@ import os
 import duckdb
 import numpy as np
 from . import dtype_dictionaries 
+from . import duck_db_helper
 
 def __transform_month__(match):
     month_abbreviations = {
@@ -88,14 +89,6 @@ def __process_met_pdf__(file_path):
             i += 1
     return df
 
-
-def __get_tables__(conn):
-    tables_lists = conn.sql("SHOW TABLES").fetchall()
-    return [t[0] for t in tables_lists]
-
-def __table_exists__(table_name, conn):
-    return table_name in __get_tables__(conn)
-
 def move_to_formatted(data_dir):
 
     data_path= os.path.join(data_dir, "landing", "persistent", "*", "*")
@@ -107,7 +100,7 @@ def move_to_formatted(data_dir):
             continue
         base_name = os.path.basename(file) # Get last part of the filepath
         table_name = os.path.splitext(base_name)[0] # Remove the extension if there is one
-        if __table_exists__(table_name, conn):
+        if duck_db_helper.table_exists(table_name, conn):
             continue
         print(f"Processing: {table_name}")
         # only move .csv and .pdf files to a table
@@ -130,7 +123,7 @@ def move_to_formatted(data_dir):
 def list_formatted_tables(data_dir):
     # CHECK THE TABLES ON THE DB
     conn = duckdb.connect(os.path.join(data_dir,'formatted_zone', 'formatted_zone.db'))
-    tables = __get_tables__(conn)
+    tables = duck_db_helper.get_tables(conn)
     for table_name in tables:
         print(table_name)
         # df = conn.sql(f"SELECT * FROM \"{table_name}\";").df()
