@@ -4,6 +4,7 @@ from src import data_load
 from src import directory_creation
 from src import persistent_zone
 from src import formatted_zone
+from src import trusted_zone
 
 def download_command(args):
     save_dir = "data/landing/temporal"
@@ -42,6 +43,7 @@ def list_formatted_tables(args):
 
 def trusted_command(args):
     print("Enable trusted data")
+    trusted_zone.move_to_trusted("data")
 
 def exploitation_command(args):
     print("Enable exploitation data")
