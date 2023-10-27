@@ -22,3 +22,4 @@ data/**/*.csv
 data/**/*.pdf
 data/**/*.db
 data/**/*.txt
+data/**/*.wal
