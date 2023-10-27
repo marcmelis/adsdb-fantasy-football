@@ -5,6 +5,7 @@ from src import directory_creation
 from src import persistent_zone
 from src import formatted_zone
 from src import trusted_zone
+from src import exploitation_zone
 
 def download_command(args):
     save_dir = "data/landing/temporal"
@@ -47,7 +48,9 @@ def trusted_command(args):
 
 def exploitation_command(args):
     print("Enable exploitation data")
+    exploitation_zone.move_to_exploitation_zone("data")
 
+    
 def main():
     parser = argparse.ArgumentParser(description="Data Backbone Manager")
 
