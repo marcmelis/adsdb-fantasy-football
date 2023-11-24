@@ -14,6 +14,7 @@ def create_directories(data_dir):
         'landing/persistent/football-data',
         'landing/persistent/team_stadium_location',
         'landing/persistent/weather_station_locations'
+        'analytical_sandboxes/'
     ]
 
     for directory in directories:

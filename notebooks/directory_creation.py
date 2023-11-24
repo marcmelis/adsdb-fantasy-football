@@ -13,6 +13,7 @@ directories = [
     '../data/landing/persistent/football-data',
     '../data/landing/persistent/team_stadium_location',
     '../data/landing/persistent/weather_station_locations'
+    '../data/analytical_sandboxes/'
 ]
 
 for directory in directories:
