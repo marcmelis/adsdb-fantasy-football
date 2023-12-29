@@ -23,3 +23,5 @@ data/**/*.pdf
 data/**/*.db
 data/**/*.txt
 data/**/*.wal
+*.pkl
+*.png
