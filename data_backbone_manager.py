@@ -8,6 +8,7 @@ from src import trusted_zone
 from src import exploitation_zone
 from src import analytical_sandbox
 from src import feature_generation
+from src import data_quality
 
 def download_command(args):
     save_dir = "data/landing/temporal"
@@ -60,6 +61,9 @@ def feature_command(args):
     print("Enable feature generation data")
     feature_generation.move_to_feature_generation("data")
 
+def data_quality_command(args):
+    print("Enabling Data Quality")
+    data_quality.execute_data_quality("data")
 
 def main():
     parser = argparse.ArgumentParser(description="Data Backbone Manager")
@@ -120,6 +124,12 @@ def main():
         help="Enable feature generation data",
     )
 
+    parser.add_argument(
+        "--data_quality",
+        "-q",
+        action="store_true",
+        help="Enable feature generation data",
+    )
 
     parser.add_argument(
         "--all",
@@ -146,6 +156,8 @@ def main():
         analytical_command(args)
     if args.feature_generation:
         feature_command(args)
+    if args.data_quality:
+        data_quality_command(args)
     if args.all:
         download_command(args)
         persistent_command(args)
