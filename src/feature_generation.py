@@ -2,8 +2,9 @@ import os
 import sys
 
 import pandas as pd
-import duck_db_helper
 import duckdb
+
+from . import duck_db_helper
 
 def calculate_streak(player_group):
     streaks = []

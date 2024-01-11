@@ -1,8 +1,10 @@
-import duckdb
-import pandas as pd
-import duck_db_helper
 import os
 import sys
+
+import duckdb
+import pandas as pd
+
+from . import duck_db_helper
 
 
 def move_to_analytical_sandbox(data_dir):
