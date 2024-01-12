@@ -9,6 +9,7 @@ from src import exploitation_zone
 from src import analytical_sandbox
 from src import feature_generation
 from src import data_quality
+from src import prediction
 
 def download_command(args):
     save_dir = "data/landing/temporal"
@@ -64,6 +65,10 @@ def feature_command(args):
 def data_quality_command(args):
     print("Enabling Data Quality")
     data_quality.execute_data_quality("data")
+
+def predict_command(args):
+    print("Enabling Data Quality")
+    prediction.predict("data")
 
 def main():
     parser = argparse.ArgumentParser(description="Data Backbone Manager")
@@ -130,6 +135,12 @@ def main():
         action="store_true",
         help="Enable feature generation data",
     )
+    
+    parser.add_argument(
+        "--predict",
+        action="store_true",
+        help="Run a prediction for a player",
+    )
 
     parser.add_argument(
         "--all",
@@ -158,6 +169,8 @@ def main():
         feature_command(args)
     if args.data_quality:
         data_quality_command(args)
+    if args.predict:
+        predict_command(args)
     if args.all:
         download_command(args)
         persistent_command(args)
