@@ -13,7 +13,8 @@ from . import duck_db_helper
 
 def train_model(data_dir):
     table_name = 'train_feature_1'
-    conn = duckdb.connect(os.path.join(data_dir, 'feature_generation', 'train.db'))
+    db_path = os.path.join(data_dir, 'feature_generation', 'train.db')
+    conn = duckdb.connect(db_path)
     df = conn.sql(f"SELECT * FROM \"{table_name}\";").df()
     conn.close()
 
@@ -25,4 +26,5 @@ def train_model(data_dir):
     # create a database if it doesn't exist, that is the model registry.
     # name_of_model | dataset_used | date_trained
     with open(os.path.join(data_dir, 'models','train_registry.csv'), mode='a') as f:
-        f.write(f'{str(date.today())},{model_name},{model_formula},{db}:{table_name},{model.rsquared}\n')
+        f.write(f'{str(date.today())},{model_name},{model_formula},{db_path}:{table_name},{model.rsquared}\n')
+        print(f'{model_name}: R^2 {model.rsquared}')

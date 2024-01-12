@@ -11,8 +11,10 @@ from src import feature_generation
 from src import data_quality
 from src import split
 from src import model_training
+from src import validate
 from src import prediction
 
+DATA_DIR = 'data'
 
 def download_command(args):
     save_dir = "data/landing/temporal"
@@ -36,50 +38,52 @@ def download_command(args):
 
 
 def persistent_command(args):
-    data_dir = "data"
-    print("Creating directory structure")
-    directory_creation.create_directories(data_dir)
+    data_dir = DATA_DIR
     print("Moving files to persistent")
     persistent_zone.move_to_persistent(data_dir)
 
 def formatted_command(args):
     print("Enable formatted data")
-    formatted_zone.move_to_formatted("data")
+    formatted_zone.move_to_formatted(DATA_DIR)
 
 def list_formatted_tables(args):
-    formatted_zone.list_formatted_tables("data")
+    formatted_zone.list_formatted_tables(DATA_DIR)
 
 def trusted_command(args):
     print("Enable trusted data")
-    trusted_zone.move_to_trusted("data")
+    trusted_zone.move_to_trusted(DATA_DIR)
 
 def exploitation_command(args):
     print("Enable exploitation data")
-    exploitation_zone.move_to_exploitation_zone("data")
+    exploitation_zone.move_to_exploitation_zone(DATA_DIR)
 
 def analytical_command(args):
     print("Enable analytical sandbox data")
-    analytical_sandbox.move_to_analytical_sandbox("data")
+    analytical_sandbox.move_to_analytical_sandbox(DATA_DIR)
 
 def feature_command(args):
     print("Enable feature generation data")
-    feature_generation.move_to_feature_generation("data")
+    feature_generation.move_to_feature_generation(DATA_DIR)
 
 def data_quality_command(args):
     print("Enabling Data Quality")
-    data_quality.execute_data_quality("data")
+    data_quality.execute_data_quality(DATA_DIR)
 
 def split_command(args):
     print('Splitting Train and Test')
-    split.split("data")
+    split.split(DATA_DIR)
 
 def model_train_command(args):
     print("Train new model")
-    model_training.train_model("data")
+    model_training.train_model(DATA_DIR)
+
+def model_validate_command(args):
+    print("Validating new model")
+    validate.validate_model(DATA_DIR)
 
 def predict_command(args):
     print("Predict on new data")
-    prediction.predict("data")
+    prediction.predict(DATA_DIR)
 
 def main():
     parser = argparse.ArgumentParser(description="Data Backbone Manager")
@@ -160,9 +164,21 @@ def main():
     )
 
     parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Validate new model",
+    )
+
+    parser.add_argument(
         "--predict",
         action="store_true",
         help="Run a prediction for a player",
+    )
+
+    parser.add_argument(
+        "--second_part",
+        action="store_true",
+        help="Run second part of the project",
     )
 
     parser.add_argument(
@@ -173,6 +189,7 @@ def main():
     )
 
     args = parser.parse_args()
+    directory_creation.create_directories(DATA_DIR)
 
     if args.download:
         download_command(args)
@@ -196,6 +213,8 @@ def main():
         split_command(args)
     if args.train:
         model_train_command(args)
+    if args.validate:
+        model_validate_command(args)
     if args.predict:
         predict_command(args)
     if args.all:
@@ -208,7 +227,7 @@ def main():
         feature_command(args)
         split_command(args)
         model_train_command(args)
-
+        model_validate_command(args)
     if args.second_part:
         analytical_command(args)
         feature_command(args)
@@ -216,6 +235,7 @@ def main():
         train_command(args)
         validate_command(args)
         model_train_command(args)
+        model_validate_command(args)
 
 if __name__ == "__main__":
     main()
