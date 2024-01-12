@@ -34,7 +34,7 @@ def select_name(names):
     while True:
         time.sleep(0.10)
         event = keyboard.read_event(suppress=True)
-        if event.event_type != keyboard.KEY_DOWN :
+        if event.event_type != keyboard.KEY_DOWN:
             continue
 
         if event.name == 'down':
@@ -48,7 +48,7 @@ def select_name(names):
             selected_index = 0
             search_string = search_string[:-1]
             filtered_names = [s for s in names if s.lower().startswith(search_string)]
-        elif 'a' <= event.name <= 'z':
+        elif 'a' <= event.name <= 'z' and len(event.name) == 1:
             # If the user types a letter (a-z), append it to user_input
             selected_index = 0
             search_string += event.name
