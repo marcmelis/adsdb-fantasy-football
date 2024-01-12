@@ -232,8 +232,6 @@ def main():
         analytical_command(args)
         feature_command(args)
         split_command(args)
-        train_command(args)
-        validate_command(args)
         model_train_command(args)
         model_validate_command(args)
 
