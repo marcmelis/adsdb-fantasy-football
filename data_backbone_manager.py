@@ -9,7 +9,10 @@ from src import exploitation_zone
 from src import analytical_sandbox
 from src import feature_generation
 from src import data_quality
+from src import split
+from src import model_training
 from src import prediction
+
 
 def download_command(args):
     save_dir = "data/landing/temporal"
@@ -66,8 +69,16 @@ def data_quality_command(args):
     print("Enabling Data Quality")
     data_quality.execute_data_quality("data")
 
+def split_command(args):
+    print('Splitting Train and Test')
+    split.split("data")
+
+def model_train_command(args):
+    print("Train new model")
+    model_training.train_model("data")
+
 def predict_command(args):
-    print("Enabling Data Quality")
+    print("Predict on new data")
     prediction.predict("data")
 
 def main():
@@ -135,7 +146,19 @@ def main():
         action="store_true",
         help="Enable feature generation data",
     )
-    
+
+    parser.add_argument(
+        "--split",
+        action="store_true",
+        help="Split train and test",
+    )
+
+    parser.add_argument(
+        "--train",
+        action="store_true",
+        help="Train new model",
+    )
+
     parser.add_argument(
         "--predict",
         action="store_true",
@@ -169,6 +192,10 @@ def main():
         feature_command(args)
     if args.data_quality:
         data_quality_command(args)
+    if args.split:
+        split_command(args)
+    if args.train:
+        model_train_command(args)
     if args.predict:
         predict_command(args)
     if args.all:
@@ -179,6 +206,16 @@ def main():
         exploitation_command(args)
         analytical_command(args)
         feature_command(args)
+        split_command(args)
+        model_train_command(args)
+
+    if args.second_part:
+        analytical_command(args)
+        feature_command(args)
+        split_command(args)
+        train_command(args)
+        validate_command(args)
+        model_train_command(args)
 
 if __name__ == "__main__":
     main()
