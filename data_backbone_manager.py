@@ -10,7 +10,9 @@ from src import analytical_sandbox
 from src import feature_generation
 from src import data_quality
 from src import split
+from src import model_training
 from src import prediction
+
 
 def download_command(args):
     save_dir = "data/landing/temporal"
@@ -70,6 +72,10 @@ def data_quality_command(args):
 def split_command(args):
     print('Splitting Train and Test')
     split.split("data")
+
+def model_train_command(args):
+    print("Train new model")
+    model_training.train_model("data")
 
 def predict_command(args):
     print("Predict on new data")
@@ -148,6 +154,12 @@ def main():
     )
 
     parser.add_argument(
+        "--train",
+        action="store_true",
+        help="Train new model",
+    )
+
+    parser.add_argument(
         "--predict",
         action="store_true",
         help="Run a prediction for a player",
@@ -182,6 +194,8 @@ def main():
         data_quality_command(args)
     if args.split:
         split_command(args)
+    if args.train:
+        model_train_command(args)
     if args.predict:
         predict_command(args)
     if args.all:
@@ -193,6 +207,7 @@ def main():
         analytical_command(args)
         feature_command(args)
         split_command(args)
+        model_train_command(args)
 
     if args.second_part:
         analytical_command(args)
@@ -200,7 +215,7 @@ def main():
         split_command(args)
         train_command(args)
         validate_command(args)
-
+        model_train_command(args)
 
 if __name__ == "__main__":
     main()
