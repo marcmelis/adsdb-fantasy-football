@@ -67,7 +67,7 @@ def data_quality_command(args):
     data_quality.execute_data_quality("data")
 
 def predict_command(args):
-    print("Enabling Data Quality")
+    print("Predict on new data")
     prediction.predict("data")
 
 def main():
